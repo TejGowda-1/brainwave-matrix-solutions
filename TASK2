@@ -1,0 +1,168 @@
+import datetime
+
+class InventoryManager:
+    def __init__(self):
+        self.products = {}
+        self.reviews = {}
+        self.sales = []
+
+    def add_product(self, pid, name, qty, price):
+        self.products[pid] = {'name': name, 'qty': qty, 'price': price}
+        print(f"Product '{name}' added successfully.")
+
+    def edit_product(self, pid, name=None, qty=None, price=None):
+        if pid in self.products:
+            if name:
+                self.products[pid]['name'] = name
+            if qty is not None:
+                self.products[pid]['qty'] = qty
+            if price is not None:
+                self.products[pid]['price'] = price
+            print("Product updated successfully.")
+        else:
+            print("Product not found.")
+
+    def delete_product(self, pid):
+        if pid in self.products:
+            del self.products[pid]
+            print("Product deleted.")
+        else:
+            print("Product not found.")
+
+    def generate_low_stock_report(self, threshold=5):
+        return {pid: info for pid, info in self.products.items() if info['qty'] < threshold}
+
+    def record_sale(self, pid, qty):
+        if pid in self.products and self.products[pid]['qty'] >= qty:
+            self.products[pid]['qty'] -= qty
+            self.sales.append({'pid': pid, 'qty': qty, 'date': datetime.date.today()})
+            print("Sale recorded.")
+        else:
+            print("Insufficient stock or product not found.")
+
+    def weekly_sales_summary(self):
+        one_week_ago = datetime.date.today() - datetime.timedelta(days=7)
+        return [s for s in self.sales if s['date'] >= one_week_ago]
+
+    def add_review(self, pid, customer, comment):
+        if pid not in self.reviews:
+            self.reviews[pid] = []
+        self.reviews[pid].append({
+            'customer': customer,
+            'comment': comment,
+            'date': datetime.date.today()
+        })
+        print("Review added.")
+
+    def get_reviews(self, pid):
+        return self.reviews.get(pid, [])
+
+
+def display_menu():
+    print("\nInventory Management System")
+    print("1. Add Product")
+    print("2. Edit Product")
+    print("3. Delete Product")
+    print("4. View Low Stock Report")
+    print("5. Record Sale")
+    print("6. Weekly Sales Summary")
+    print("7. Add Review")
+    print("8. View Reviews")
+    print("9. View Product Details")  # New Option
+    print("10. Exit")
+
+
+def main():
+    manager = InventoryManager()
+
+    while True:
+        display_menu()
+        choice = input("Enter your choice (1-10): ")
+
+        if choice == '1':
+            pid = input("Product ID: ")
+            name = input("Name: ")
+            try:
+                qty = int(input("Quantity: "))
+                price = float(input("Price: "))
+                manager.add_product(pid, name, qty, price)
+            except ValueError:
+                print("Invalid quantity or price.")
+
+        elif choice == '2':
+            pid = input("Product ID to edit: ")
+            name = input("New Name (or leave blank): ") or None
+            qty_input = input("New Quantity (or leave blank): ")
+            price_input = input("New Price (or leave blank): ")
+
+            qty = int(qty_input) if qty_input else None
+            price = float(price_input) if price_input else None
+
+            manager.edit_product(pid, name, qty, price)
+
+        elif choice == '3':
+            pid = input("Product ID to delete: ")
+            manager.delete_product(pid)
+
+        elif choice == '4':
+            report = manager.generate_low_stock_report()
+            if report:
+                print("Low Stock Report:")
+                for pid, info in report.items():
+                    print(f"{pid}: {info['name']} - Qty: {info['qty']}")
+            else:
+                print("All products sufficiently stocked.")
+
+        elif choice == '5':
+            pid = input("Product ID: ")
+            try:
+                qty = int(input("Quantity Sold: "))
+                manager.record_sale(pid, qty)
+            except ValueError:
+                print("Invalid quantity.")
+
+        elif choice == '6':
+            summary = manager.weekly_sales_summary()
+            if summary:
+                print("Weekly Sales Summary:")
+                for s in summary:
+                    print(f"{s['date']} - {s['pid']} - Qty: {s['qty']}")
+            else:
+                print("No sales in the past week.")
+
+        elif choice == '7':
+            pid = input("Product ID: ")
+            customer = input("Customer Name: ")
+            comment = input("Review: ")
+            manager.add_review(pid, customer, comment)
+
+        elif choice == '8':
+            pid = input("Product ID to view reviews: ")
+            reviews = manager.get_reviews(pid)
+            if reviews:
+                for r in reviews:
+                    print(f"{r['date']} - {r['customer']}: {r['comment']}")
+            else:
+                print("No reviews found for this product.")
+
+        elif choice == '9':
+            pid = input("Product ID to view details: ")
+            product = manager.products.get(pid)
+            if product:
+                print(f"Product ID: {pid}")
+                print(f"Name: {product['name']}")
+                print(f"Quantity: {product['qty']}")
+                print(f"Price: ₹{product['price']:.2f}")
+            else:
+                print("Product not found.")
+
+        elif choice == '10':
+            print("Exiting program. Goodbye!")
+            break
+
+        else:
+            print("Invalid choice. Try again.")
+
+
+if __name__ == "__main__":
+    main()
